@@ -1,0 +1,113 @@
+#p1.gexing.com文件input模块配置
+$InputFileName /data/www/logs/p1.gexing.com-access.log
+$InputFileTag nginx-p1-access:
+$InputFileStateFile p1.gexing.com-access.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#p1.gexing.com-error文件input模块配置
+$InputFileName /data/www/logs/p1.gexing.com-error.log
+$InputFileTag nginx-p1-error:
+$InputFileStateFile p1.gexing.com-error.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5	
+$InputRunFileMonitor
+
+#pic.upload.z.gexing.com文件input模块配置
+$InputFileName /data/www/logs/pic.upload.z.gexing.com-access.log
+$InputFileTag nginx-pic-upload-z-access:
+$InputFileStateFile pic.upload.z.gexing.com-access.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#pic.upload.z.gexing.com-error文件input模块配置
+$InputFileName /data/www/logs/pic.upload.z.gexing.com-error.log
+$InputFileTag nginx-pic-upload-z-error:
+$InputFileStateFile pic.upload.z.gexing.com-error.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5	
+$InputRunFileMonitor
+
+#pic.tmp.z.gexing.com文件input模块配置
+$InputFileName /data/www/logs/pic.tmp.z.gexing.com-access.log
+$InputFileTag nginx-pic-tmp-z-access:
+$InputFileStateFile pic.tmp.z.gexing.com-access.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#pic.tmp.z.gexing.com-error文件input模块配置
+$InputFileName /data/www/logs/pic.tmp.z.gexing.com-error.log
+$InputFileTag nginx-pic-tmp-z-error:
+$InputFileStateFile pic.tmp.z.gexing.com-error.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5	
+$InputRunFileMonitor
+
+#photo.gexing.com文件input模块配置
+$InputFileName /data/www/logs/photo.gexing.com-access.log
+$InputFileTag nginx-photo-access:
+$InputFileStateFile photo.gexing.com-access.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#photo.gexing.com-error文件input模块配置
+$InputFileName /data/www/logs/photo.gexing.com-error.log
+$InputFileTag nginx-photo-error:
+$InputFileStateFile photo.gexing.com-error.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5	
+$InputRunFileMonitor
+
+#cache.photo.gexing.com文件input模块配置
+$InputFileName /data/www/logs/cache.photo.gexing.com-access.log
+$InputFileTag nginx-cache-photo-access:
+$InputFileStateFile cache.photo.gexing.com-access.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#cache.photo.gexing.com-error文件input模块配置
+$InputFileName /data/www/logs/cache.photo.gexing.com-error.log
+$InputFileTag nginx-cache-photo-error:
+$InputFileStateFile cache.photo.gexing.com-error.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5	
+$InputRunFileMonitor
+
+#却除nginx里含有200状态码的日志filter配置
+if ($APP-NAME == 'nginx-p1-access' or $APP-NAME == 'nginx-pic-upload-z-access' or $APP-NAME == 'nginx-pic-tmp-z-access' or $APP-NAME == 'nginx-photo-access' or $APP-NAME == 'nginx-cache-photo-access') and ($msg contains '  rc:200  ') then ~
+
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-p1-access'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-p1-access'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-p1-error'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-p1-error'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-pic-upload-z-access'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-pic-upload-z-access'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-pic-upload-z-error'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-pic-upload-z-error'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-pic-tmp-z-access'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-pic-tmp-z-access'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-pic-tmp-z-error'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-pic-tmp-z-error'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-photo-access'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-photo-access'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-photo-error'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-photo-error'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-cache-photo-access'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-cache-photo-access'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-cache-photo-error'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'nginx-cache-photo-error'  then ~

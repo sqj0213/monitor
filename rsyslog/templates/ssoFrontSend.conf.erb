@@ -1,0 +1,67 @@
+#sso.gexing.com-access文件input模块配置
+$InputFileName /data/www/logs/sso.gexing.com-access.log
+$InputFileTag webFront-nginx-sso-access:
+$InputFileStateFile sso.gexing.com-access.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#sso.gexing.com-error文件input模块配置
+$InputFileName /data/www/logs/sso.gexing.com-error.log
+$InputFileTag webFront-nginx-sso-error:
+$InputFileStateFile sso.gexing.com-error.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#webFront-php-fpm-error文件input模块配置
+$InputFileName /data/www/logs/php-fpm-error.log
+$InputFileTag webFront-php-fpm-error:
+$InputFileStateFile php-fpm-error.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#webFront-php-fpm-slow文件input模块配置
+$InputFileName /data/www/logs/php-fpm-slow.log
+$InputFileTag webFront-php-fpm-slow:
+$InputFileStateFile php-fpm-slow.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#webFront-messages文件input模块配置
+$InputFileName /var/log/messages
+$InputFileTag webFront-messages:
+$InputFileStateFile messages.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#却除nginx里含有200状态码的日志filter配置
+if ($APP-NAME == 'webFront-nginx-sso-access') and ($msg contains '  rc:200  ') then ~
+
+#syslog 转发到relay机器进行邮件与短信提醒
+$ActionQueueFileName fwdRule3 # unique name prefix for spool files
+$ActionQueueMaxDiskSpace 1g   # 1gb space limit (use as much as possible)
+$ActionQueueSaveOnShutdown on # save messages to disk on shutdown
+$ActionQueueType LinkedList   # run asynchronously(action memory queue)
+$ActionResumeRetryCount -1    # infinite retries if host is down
+$ActionQueueSize  10000      # over quota message is discarded(10000*5k=50m)
+$ActionResumeInterval 5     #30 seconds retry, retry policy notice
+
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'webFront-nginx-sso-access'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'webFront-nginx-sso-access'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'webFront-nginx-sso-error'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'webFront-nginx-sso-error'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'webFront-php-fpm-error'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'webFront-php-fpm-error'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'webFront-php-fpm-slow'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'webFront-php-fpm-slow'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text=='info' and  $APP-NAME == 'webFront-messages'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text=='info' and  $APP-NAME == 'webFront-messages'  then ~

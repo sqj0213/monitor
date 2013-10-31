@@ -1,0 +1,100 @@
+# rsyslog v5 configuration file
+
+# For more information see /usr/share/doc/rsyslog-*/rsyslog_conf.html
+# If you experience problems, see http://www.rsyslog.com/doc/troubleshoot.html
+
+#### MODULES ####
+
+$ModLoad imuxsock # provides support for local system logging (e.g. via logger command)
+$ModLoad imklog   # provides kernel logging support (previously done by rklogd)
+$ModLoad imtcp   #接收phpslowlog
+$ModLoad ommail
+
+#### GLOBAL DIRECTIVES ####
+
+# Use default timestamp format
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+# File syncing capability is disabled by default. This feature is usually not required,
+# not useful and an extreme performance hit
+#$ActionFileEnableSync on
+
+# Include all config files in /etc/rsyslog.d/
+$IncludeConfig /etc/rsyslog.d/*.conf
+
+
+#### RULES ####
+
+# Log all kernel messages to the console.
+# Logging much else clutters up the screen.
+#kern.*                                                 /dev/console
+
+# Log anything (except mail) of level info or higher.
+# Don't log private authentication messages!
+*.info;mail.none;authpriv.none;cron.none;local6.none;local7.none                /var/log/messages
+
+# The authpriv file has restricted access.
+authpriv.*                                              /var/log/secure
+
+# Log all the mail messages in one place.
+mail.*                                                  -/var/log/maillog
+
+
+# Log cron stuff
+cron.*                                                  /var/log/cron
+
+# Everybody gets emergency messages
+*.emerg                                                 *
+
+# Save news errors of level crit and higher in a special file.
+uucp,news.crit                                          /var/log/spooler
+
+# Save boot messages also to boot.log
+local7.*                                                /var/log/boot.log
+
+
+$RuleSet remoteclient
+$MaxMessageSize 5k
+#邮件与短信接口提醒会写入/tmp/alertDaemon.sock侦听程序为/usr/local/gexing/alert/alertServer.py
+$ModLoad omuxsock
+$OMUxSockSocket /tmp/unixDomain.sock
+$template alertMsg,"%syslogpriority%|[%TIMESTAMP:1:16:date-rfc3339%][%hostname%][%app-name%]|%msg%"
+*.warning;*.error :omuxsock:;alertMsg
+
+#邮件提醒
+
+#$ActionMailSMTPServer service.gexing.com
+#$ActionMailFrom monitor@service.gexing.com
+#$ActionMailTo sysadmin@service.gexing.com
+
+#$template mailSubject,"[%TIMESTAMP:::date-rfc3339%][%hostname%][%app-name%] run error %priority%"
+#$template mailBody,"RSYSLOG Alert\r\nhostname=%hostname%,appname=%app-name%,date=%TIMESTAMP:::date-rfc3339%,msg='%msg%'"
+#$ActionMailSubject mailSubject
+# make sure we receive a mail only once in six
+# hours (21,600 seconds ;))
+#$ActionExecOnlyOnceEveryInterval 600
+# the if ... then ... mailBody mus be on one line!
+#local7.*;local7.!=info;local7.!=notice;local7.!=debug :ommail:;mailBody   
+
+
+#action队列参数设置
+$MaxMessageSize 5k#msg为4096
+$WorkDirectory /data/rsyslog/spool/ # where to place spool files
+
+#runlog日志信息转发中心机
+$ActionQueueFileName fwdRule1 # unique name prefix for spool files
+$ActionQueueMaxDiskSpace 1g   # 1gb space limit (use as much as possible)
+$ActionQueueSaveOnShutdown on # save messages to disk on shutdown
+$ActionQueueType LinkedList   # run asynchronously(action memory queue)
+$ActionResumeRetryCount 100    # infinite retries if host is down
+$ActionQueueSize  10000      # over quota message is discarded(10000*5k=50m)
+$ActionResumeInterval 30     #30 seconds retry, retry policy notice 
+#$ActionQueueTimeoutActionCompletion 10000 #10 seconds???
+#$ActionQueueTimeoutEnqueue 20000 #20 seconds ???
+local7.*  @@192.168.59.134:10515#以tcp的方式行转发,默认为目标机器的514端口
+
+$InputTCPServerBindRuleset remoteclient
+$InputTCPServerRun 10514
+
+#切换为原始的ruleset
+$RuleSet RSYSLOG_DefaultRuleset

@@ -1,0 +1,141 @@
+# rsyslog v5 configuration file
+
+# For more information see /usr/share/doc/rsyslog-*/rsyslog_conf.html
+# If you experience problems, see http://www.rsyslog.com/doc/troubleshoot.html
+
+#### MODULES ####
+
+$ModLoad imuxsock # provides support for local system logging (e.g. via logger command)
+$ModLoad imklog   # provides kernel logging support (previously done by rklogd)
+#$ModLoad immark  # provides --MARK-- message capability
+$ModLoad imfile
+
+#### GLOBAL DIRECTIVES ####
+
+# Use default timestamp format
+$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
+
+# File syncing capability is disabled by default. This feature is usually not required,
+# not useful and an extreme performance hit
+#$ActionFileEnableSync on
+$WorkDirectory /data/rsyslog/spool/ # where to place spool files
+
+# Include all config files in /etc/rsyslog.d/
+$IncludeConfig /etc/rsyslog.d/*.conf
+
+#### RULES ####
+
+# Log all kernel messages to the console.
+# Logging much else clutters up the screen.
+#kern.*                                                 /dev/console
+
+# Log anything (except mail) of level info or higher.
+# Don't log private authentication messages!
+*.info;mail.none;authpriv.none;cron.none;kern.*;local6.none;local7.none;local2.none                /var/log/messages
+
+# The authpriv file has restricted access.
+authpriv.*                                              /var/log/secure
+
+# Log all the mail messages in one place.
+mail.*                                                  -/var/log/maillog
+
+
+# Log cron stuff
+cron.*                                                  /var/log/cron
+
+# Everybody gets emergency messages
+*.emerg                                                 *
+
+# Save news errors of level crit and higher in a special file.
+uucp,news.crit                                          /var/log/spooler
+
+# Save boot messages also to boot.log
+#local7.*                                                /var/log/boot.log
+
+#接收慢日志
+#$InputFileName /data/www/logs/php-fpm-slow.log
+#$InputFileTag phpslowlog:
+#$InputFileStateFile stat-file1
+#$InputFileSeverity info
+#$InputFileFacility local7
+#$InputRunFileMonitor
+
+#接收php-fpm-error日志
+#$InputFileName /data/www/logs/php-fpm.error.log
+#$InputFileTag php-fpm-error:
+#$InputFileStateFile stat-file2
+#$InputFileSeverity error
+#$InputFileFacility local7
+#$InputFilePollInterval 5
+#$InputRunFileMonitor
+
+#接收gexing-access日志
+#$InputFileName /data/www/logs/gexing.com-access.log
+#$InputFileTag gexing-access:
+#$InputFileStateFile stat-file3
+#$InputFileSeverity info
+#$InputFileFacility local7
+#$InputFilePollInterval 5
+#$InputRunFileMonitor
+
+##接收gexing-error日志
+#$InputFileName /data/www/logs/gexing.com-error.log
+#$InputFileTag gexing-error:
+#$InputFileStateFile stat-file4
+#$InputFileSeverity error
+#$InputFileFacility local7
+#$InputFilePollInterval 5
+#$InputRunFileMonitor
+
+
+
+#- allows to specify maximum supported message size (both for sending and receiving).
+# The default should be sufficient for almost all cases. 
+#Do not set this below 1k, as it would cause interoperability problems with other syslog implementations.
+#
+
+#$MaxMessageSize <size_nbr>, default 2k 
+$MaxMessageSize 2k
+
+# ### begin forwarding rule ###
+# The statement between the begin ... end define a SINGLE forwarding
+# rule. They belong together, do NOT split them. If you create multiple
+# forwarding rules, duplicate the whole block!
+# Remote Logging (we use TCP for reliable delivery)
+#
+# An on-disk queue is created for this action. If the remote host is
+# down, messages are spooled to disk and sent when it is up again.
+
+
+#statistics日志直接发送到中心机
+$ActionQueueFileName fwdRule1 # unique name prefix for spool files
+$ActionQueueMaxDiskSpace 1g   # 1gb space limit (use as much as possible)
+$ActionQueueSaveOnShutdown on # save messages to disk on shutdown
+$ActionQueueType LinkedList   # run asynchronously
+$ActionResumeRetryCount -1    # infinite retries if host is down
+$ActionQueueSize  10000    # infinite retries if host is down
+# remote host is: name/ip:port, e.g. 192.168.0.1:514, port optional
+if ( $syslogfacility-text=='local6' and  $APP-NAME != 'browserJSLog' and $APP-NAME != 'mobileClientLog' ) then @@211.154.255.103:10514
+if ( $syslogfacility-text=='local6' and  $APP-NAME != 'browserJSLog' and $APP-NAME != 'mobileClientLog' ) then ~
+if ( $syslogfacility-text=='local6' and ( $APP-NAME == 'browserJSLog' or $APP-NAME == 'mobileClientLog' ) ) then @@<%= ip %>:10514
+if ( $syslogfacility-text=='local6' and ( $APP-NAME == 'browserJSLog' or $APP-NAME == 'mobileClientLog' ) ) then ~
+#local6.* @@211.154.255.103:10514
+# ### end of the forwarding rule ###
+
+
+#runlog 转发到relay机器进行邮件与短信提醒
+$ActionQueueFileName fwdRule2 # unique name prefix for spool files
+$ActionQueueMaxDiskSpace 1g   # 1gb space limit (use as much as possible)
+$ActionQueueSaveOnShutdown on # save messages to disk on shutdown
+$ActionQueueType LinkedList   # run asynchronously(action memory queue)
+$ActionResumeRetryCount -1    # infinite retries if host is down
+$ActionQueueSize  10000      # over quota message is discarded(10000*5k=50m)
+$ActionResumeInterval 5     #30 seconds retry, retry policy notice 
+#$ActionQueueTimeoutActionCompletion 10000 #10 seconds???
+#$ActionQueueTimeoutEnqueue 20000 #20 seconds ???
+if  $syslogfacility-text == 'local7' and $APP-NAME == 'webtask-sendcmd'  then @@172.16.2.14:10514
+if  $syslogfacility-text == 'local7' and $APP-NAME == 'webtask-sendcmd'  then ~
+#if  $syslogfacility-text == 'local7' and $APP-NAME == 'php-fpm-error'  then @@<%= ip%>:10514
+#if  $syslogfacility-text == 'local7' and $APP-NAME == 'gexing-access'  then @@<%= ip%>:10514
+#if  $syslogfacility-text == 'local7' and $APP-NAME == 'gexing-error'  then @@<%= ip%>:10514
+#if  $syslogfacility-text == 'local7' and $APP-NAME == 'phpslowlog'  then @@211.154.255.103:10514 #tcp10514端口接收

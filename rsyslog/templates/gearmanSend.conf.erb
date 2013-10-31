@@ -1,0 +1,31 @@
+#gearmanWorkerDaemon-access文件input模块配置
+$InputFileName /var/log/gearmanWorkerDaemon-access.log
+$InputFileTag gearman-gearman_worker-access:
+$InputFileStateFile gearman-gearman_worker-access.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#gearmanWorkerDaemon-error文件input模块配置
+$InputFileName /var/log/gearmanWorkerDaemon-error.log
+$InputFileTag gearman-gearman_worker-error:
+InputFileStateFile gearman-gearman_worker-error.stat
+$InputFileSeverity info
+$InputFileFacility local7
+$InputFilePollInterval 5
+$InputRunFileMonitor
+
+#syslog 转发到relay机器进行邮件与短信提醒
+$ActionQueueFileName gearman # unique name prefix for spool files
+ActionQueueMaxDiskSpace 1g   # 1gb space limit (use as much as possible)
+$ActionQueueSaveOnShutdown on # save messages to disk on shutdown
+$ActionQueueType LinkedList   # run asynchronously(action memory queue)
+$ActionResumeRetryCount -1    # infinite retries if host is down
+$ActionQueueSize  10000      # over quota message is discarded(10000*5k=50m)
+$ActionResumeInterval 5     #30 seconds retry, retry policy notice
+
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'gearman-gearman_worker-access'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'gearman-gearman_worker-access'  then ~
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'gearman-gearman_worker-error'  then @@<%= ip%>:10514
+if  $syslogfacility-text == 'local7' and $syslogseverity-text == 'info' and $APP-NAME == 'gearman-gearman_worker-error'  then ~
